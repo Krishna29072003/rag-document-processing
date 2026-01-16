@@ -50,3 +50,4 @@ ipykernel
 streamlit
 grandalf
 langchain-huggingface
+langchain-experimental
