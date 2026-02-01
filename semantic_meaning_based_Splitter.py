@@ -19,6 +19,7 @@ text_splitter = SemanticChunker(
     breakpoint_threshold_type="percentile",
     breakpoint_threshold_amount=80
 )
+
 chunks=text_splitter.split_text(sample)
 print(len(chunks))
 print(chunks)
