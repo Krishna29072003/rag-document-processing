@@ -1,9 +1,11 @@
 from langchain_community.vectorstores import FAISS
 from langchain_groq import ChatGroq
-from langchain_community.retrievers import ContextualCompressionRetriever
-from langchain_community.document_compressors import LLMChainExtractor
+'''from langchain_community.retrievers import ContextualCompressionRetriever
+from langchain_community.document_compressors import LLMChainExtractor'''
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
+from dotenv import load_dotenv
+load_dotenv()
 
 # Recreate the document objects from the previous data
 docs = [
@@ -39,20 +41,39 @@ vector_store=FAISS.from_documents(
     embedding=embeddings
 )
 
-base_retriever=vector_store.as_retriever(search_kwargs={"k": 5})
+#base_retriever=vector_store.as_retriever(search_kwargs={"k": 5})
 
 llm=ChatGroq(model="llama-3.1-8b-instant",temperature=0)
-compressor = LLMChainExtractor.from_llm(llm)
 
 # Create the contextual compression retriever
-compression_retriever = ContextualCompressionRetriever(
+'''compression_retriever = ContextualCompressionRetriever(
     base_retriever=base_retriever,
     base_compressor=compressor
-)
+)'''
+
 
 # Query the retriever
 query = "What is photosynthesis?"
-compressed_results = compression_retriever.invoke(query)
-for i, doc in enumerate(compressed_results):
-    print(f"\n--- Result {i+1} ---")
+
+compressed_docs = []
+
+for i in docs:
+    prompt = f"""
+    Question:
+    {query}
+
+    Document:
+    {i.page_content}
+
+    Extract ONLY the parts relevant to the question.
+    """
+    
+    compressed_text = llm.invoke(prompt)
+    compressed_docs.append(Document(
+            page_content=compressed_text.content,
+            metadata=i.metadata
+        ))
+
+for j, doc in enumerate(compressed_docs):
+    print(f"\n--- Result {j+1} ---")
     print(doc.page_content)
